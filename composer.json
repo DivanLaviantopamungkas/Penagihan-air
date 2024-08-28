@@ -38,7 +38,8 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-          "app/mapsline_helper.php"
+          "app/mapsline_helper.php",
+          "app/Helpers/helpers.php"
         ]
     },
     "autoload-dev": {

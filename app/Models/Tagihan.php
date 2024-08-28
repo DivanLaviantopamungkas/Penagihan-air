@@ -24,7 +24,7 @@ class Tagihan extends Model
     'total_tagihan',
     'bayar',
     'bulan',
-    'tahun'
+    'tahun',
   ];
 
   public function user()

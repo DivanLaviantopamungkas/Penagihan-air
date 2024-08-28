@@ -47,6 +47,7 @@ class TagihanController extends Controller
       $bulan_select = $request->month_filter;
       $tahun_select =  $request->year_filter;
 
+
       $user = auth()->user();
 
       $roleCode = $user->role ? $user->role->code_roles : null;
@@ -65,7 +66,11 @@ class TagihanController extends Controller
                 ->whereNull('users.deleted_at');
             })
             ->whereNull('customers.deleted_at')
-            ->selectRaw("users.*, tagihans.*, customers.*, CONCAT(rt_customers, '/', rw_customers) as rt_rw")
+            ->selectRaw("users.*, tagihans.*, customers.*, CONCAT(rt_customers, '/', rw_customers) as rt_rw, 
+            CASE 
+                WHEN tagihans.bayar IS NOT NULL THEN 'Tertagih' 
+                ELSE 'Belum Tertagih' 
+            END as statustagihan")
             ->get();
         } else {
           // Jika Customer, hanya tampilkan data pelanggan yang login
@@ -86,6 +91,7 @@ class TagihanController extends Controller
             ->where('customers.users_id', '=', $user_id) // Batasi data hanya untuk pelanggan yang login
             ->whereNull('customers.deleted_at')
             ->selectRaw("users.*, tagihans.*, customers.*, CONCAT(rt_customers, '/', rw_customers) as rt_rw")
+
             ->get();
         }
 
