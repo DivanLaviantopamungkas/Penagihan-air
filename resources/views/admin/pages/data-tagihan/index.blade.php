@@ -96,13 +96,6 @@ echo (Carbon\Carbon::now()->month ==12)? "selected":""; @endphp>Desember</option
                             </select>
                         </div>
 
-                        <div class="col-md-2">
-                            <select class="form-select" id="status" name="status" onchange="reloadDataTable()">
-                                <option value="">Semua Status</option>
-                                <option value="tertangih">Tertagih</option>
-                                <option value="belum_tertangih">Belum Tertagih</option>
-                            </select>
-                        </div>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive text-nowrap">

@@ -25,6 +25,10 @@ class Tagihan extends Model
     'bayar',
     'bulan',
     'tahun',
+    'tunggakan',
+    'denda',
+    'lain_lain'
+
   ];
 
   public function user()

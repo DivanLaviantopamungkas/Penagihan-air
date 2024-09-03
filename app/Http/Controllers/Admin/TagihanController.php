@@ -119,7 +119,10 @@ class TagihanController extends Controller
                 });
             })
             ->whereNull('customers.deleted_at')
-            ->select('users.*', 'tagihans.*', 'customers.*', DB::raw("CONCAT(rt_customers, '/', rw_customers) as rt_rw"))
+            ->select('users.*', 'tagihans.*', 'customers.*', DB::raw("CONCAT(rt_customers, '/', rw_customers) as rt_rw, CASE 
+                WHEN tagihans.bayar IS NOT NULL THEN 'Tertagih' 
+                ELSE 'Belum Tertagih' 
+            END as statustagihan"))
             ->get();
         } else {
           $user_id = $user->id;
@@ -218,7 +221,7 @@ class TagihanController extends Controller
           // dd($btn_input);
 
           $btn_payment = '';
-          if (isset($data->pakai) || empty($data->total_tagihan)) {
+          if (isset($data->pakai) && isset($data->total_tagihan)) {
             // dd($data->id_customers);
             $btn_payment = '<a class="dropdown-item" href="' . route('input-payment-route', $data->id) . '"><i class="fas fa-credit-card me-1"></i> Bayar</a>';
           }
@@ -226,7 +229,7 @@ class TagihanController extends Controller
 
           $btn_invoice = '';
           if (isset($data->pakai) && isset($data->total_tagihan)) {
-            $btn_payment = '<a class="dropdown-item" href="' . route('tagihan.invoice', $data->id) . '"><i class="fas fa-file-invoice me-1"></i> Invoice</a>';
+            $btn_invoice = '<a class="dropdown-item" href="' . route('tagihan.invoice', $data->id) . '"><i class="fas fa-file-invoice me-1"></i> Invoice</a>';
           }
 
           //detail
@@ -419,25 +422,29 @@ class TagihanController extends Controller
             return response()->json(['status' => false, 'pesan' => "Id data awal tidak ditemukan"], 400);
           }
 
+          // Periksa apakah ada data denda, tunggakan, dan lain-lain di tabel tagihans
+          $tagihanSebelumnya = Tagihan::where('user_id', $customer->user->id)
+            ->where('bulan', $request->bulan)
+            ->where('tahun', $request->tahun)
+            ->first();
+
+          $denda = $tagihanSebelumnya ? intval($tagihanSebelumnya->denda) : intval($dataAwal->denda);
+          $tunggakan = $tagihanSebelumnya ? intval($tagihanSebelumnya->tunggakan) : intval($dataAwal->tunggakan);
+          $lain_lain = $tagihanSebelumnya ? intval($tagihanSebelumnya->lain_lain) : intval($dataAwal->lain_lain);
+
           $awal = intval($dataAwal->awal);
           $akhir = intval($request->akhir);
-
           $tarif = intval($request->tarif);
 
           $pakai = $awal <= $akhir ? $akhir - $awal : (9999 - $awal) + $akhir;
           $tagihan = $pakai * $tarif;
           $tagihan = $tagihan <= 0 ? 10000 : $tagihan;
 
-          $denda = intval($dataAwal->denda);
-          $tunggakan = intval($dataAwal->tunggakan);
-          $lain_lain = intval($dataAwal->lain_lain);
-
-          // $tagihan = $pakai;
           $total_tagihan = $tagihan + $denda + $tunggakan + $lain_lain;
 
-          // store ke pelanggan
+          // Simpan data tagihan
           $dataTagihan = new Tagihan();
-          $dataTagihan->user_id = $customer->user->id; // Make sure 'id' is the correct column in the 'users' table
+          $dataTagihan->user_id = $customer->user->id;
           $dataTagihan->data_awal_id = $dataAwal->id_data_awal;
           $dataTagihan->akhir = $request->akhir;
           $dataTagihan->tarif = $request->tarif;
@@ -446,6 +453,9 @@ class TagihanController extends Controller
           $dataTagihan->pakai = $pakai;
           $dataTagihan->bulan = $request->bulan;
           $dataTagihan->tahun = $request->tahun;
+          $dataTagihan->denda = $denda;
+          $dataTagihan->tunggakan = $tunggakan;
+          $dataTagihan->lain_lain = $lain_lain;
 
           $simpan_dataTagihan = $dataTagihan->save();
 

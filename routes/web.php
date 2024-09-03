@@ -52,8 +52,6 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('/user-management', [DashboardController::class, 'usermanagement']);
     Route::get('/public-page', [DashboardController::class, 'publicpage']);
 
-
-
     // Route Menu
     Route::resource("menus", MenuController::class);
     Route::post('/menus/sort', [MenuController::class, 'sort']);
